@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>都市拡大ゲーム</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="game-container">
+        <header>
+            <h1>都市拡大ゲーム</h1>
+            <div class="status-bar">
+                <div class="resource" data-resource="food">
+                    <span class="resource-name">食料</span>
+                    <span class="resource-amount" id="food">100</span>
+                    <button class="collect-button" data-resource="food">食料を集める</button>
+                </div>
+                <div class="resource" data-resource="wood">
+                    <span class="resource-name">木材</span>
+                    <span class="resource-amount" id="wood">100</span>
+                    <button class="collect-button" data-resource="wood">木材を集める</button>
+                </div>
+                <div class="resource" data-resource="stone">
+                    <span class="resource-name">石材</span>
+                    <span class="resource-amount" id="stone">100</span>
+                    <button class="collect-button" data-resource="stone">石材を集める</button>
+                </div>
+                <div class="resource" data-resource="gold">
+                    <span class="resource-name">金鉱</span>
+                    <span class="resource-amount" id="gold">100</span>
+                    <button class="collect-button" data-resource="gold">金鉱を集める</button>
+                </div>
+            </div>
+            <button id="toggle-facility-panel">施設管理を開く</button>
+        </header>
+        <main>
+            <section class="facility-panel" id="facility-panel">
+                <h2>施設管理</h2>
+                <div class="facility" data-facility="woodcutter">
+                    <span class="facility-name">伐採場</span>
+                    <span class="facility-level" id="woodcutter-level">レベル: 1</span>
+                    <div class="upgrade-options">
+                        <button class="upgrade-button" data-facility="woodcutter" data-upgrade="production">
+                            生産量アップ<br><span class="upgrade-cost" id="woodcutter-production-cost">必要: 10 食料, 5 木材</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="facility" data-facility="quarry">
+                    <span class="facility-name">採石場</span>
+                    <span class="facility-level" id="quarry-level">レベル: 1</span>
+                    <div class="upgrade-options">
+                        <button class="upgrade-button" data-facility="quarry" data-upgrade="production">
+                            生産量アップ<br><span class="upgrade-cost" id="quarry-production-cost">必要: 15 石材, 5 金鉱</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="facility" data-facility="farm">
+                    <span class="facility-name">農場</span>
+                    <span class="facility-level" id="farm-level">レベル: 1</span>
+                    <div class="upgrade-options">
+                        <button class="upgrade-button" data-facility="farm" data-upgrade="production">
+                            生産量アップ<br><span class="upgrade-cost" id="farm-production-cost">必要: 10 食料, 5 木材</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="facility" data-facility="mine">
+                    <span class="facility-name">金鉱</span>
+                    <span class="facility-level" id="mine-level">レベル: 1</span>
+                    <div class="upgrade-options">
+                        <button class="upgrade-button" data-facility="mine" data-upgrade="production">
+                            生産量アップ<br><span class="upgrade-cost" id="mine-production-cost">必要: 20 金鉱</span>
+                        </button>
+                    </div>
+                </div>
+            </section>
+            <section class="city-panel" id="city-panel">
+                <h2>都市管理</h2>
+                <div id="city-details">
+                    <div><strong>都市</strong></div>
+                    <div>レベル: <span id="city-level">1</span></div>
+                    <div>防衛力: <span id="city-defense">10</span></div>
+                    <div>資源保有量: <span id="city-resource-storage">100</span></div>
+                    <div>人口: <span id="city-population">10</span></div>
+                    <button onclick="upgradeCity()">都市をレベルアップ</button>
+                    <button onclick="upgradeDefense()">防衛力をアップ</button>
+                </div>
+            </section>
+        </main>
+        <footer>
+            <p>© 2024 都市拡大ゲーム</p>
+        </footer>
+    </div>
+    <audio id="click-sound" src="click.mp3"></audio>
+    <audio id="build-sound" src="build.mp3"></audio>
+    <script src="script.js"></script>
+</body>
+</html>
+
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    /* Body Styling */
+    body {
+        font-family: Arial, sans-serif;
+        background-color: #f0f8ff;
+        color: #333;
+    }
+
+    /* Game Container */
+    .game-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+
+    /* Header */
+    header {
+        text-align: center;
+        margin-bottom: 20px;
+    }
+
+    .status-bar {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        margin-top: 10px;
+    }
+
+    .resource {
+        background-color: #e0e0e0;
+        padding: 10px;
+        margin: 5px;
+        border-radius: 8px;
+        text-align: center;
+        flex: 1 1 200px;
+        position: relative;
+    }
+
+    .resource-name {
+        display: block;
+        font-weight: bold;
+        margin-bottom: 5px;
+    }
+
+    .collect-button {
+        padding: 5px 10px;
+        margin-top: 5px;
+        cursor: pointer;
+        border: none;
+        border-radius: 4px;
+        background-color: #4CAF50;
+        color: white;
+        transition: background-color 0.3s;
+    }
+
+    .collect-button:hover {
+        background-color: #45a049;
+    }
+
+    /* 資源ごとの色 */
+    .resource[data-resource="food"] {
+        background-color: #FFA07A; /* 食料: サーモン色 */
+    }
+
+    .resource[data-resource="wood"] {
+        background-color: #D2B48C; /* 木材: 茶色 */
+    }
+
+    .resource[data-resource="stone"] {
+        background-color: #A9A9A9; /* 石材: 灰色 */
+    }
+
+    .resource[data-resource="gold"] {
+        background-color: #FFD700; /* 金鉱: 金色 */
+    }
+
+    /* 施設管理タブのスタイル */
+    #toggle-facility-panel {
+        margin-top: 10px;
+        padding: 8px 16px;
+        cursor: pointer;
+        border: none;
+        border-radius: 4px;
+        background-color: #008CBA;
+        color: white;
+        transition: background-color 0.3s;
+    }
+
+    #toggle-facility-panel:hover {
+        background-color: #007bb5;
+    }
+
+    .facility-panel {
+        display: none; /* 初期は非表示 */
+        margin-top: 20px;
+    }
+
+    .facility-panel h2 {
+        text-align: center;
+        margin-bottom: 10px;
+    }
+
+    .facility {
+        background-color: #f5f5f5;
+        padding: 10px;
+        margin: 5px auto;
+        border-radius: 8px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        max-width: 400px;
+    }
+
+    .facility-name {
+        font-weight: bold;
+        margin-bottom: 5px;
+    }
+
+    .facility-level {
+        margin-bottom: 10px;
+    }
+
+    .upgrade-options {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        width: 100%;
+    }
+
+    .upgrade-button {
+        padding: 8px 12px;
+        cursor: pointer;
+        border: none;
+        border-radius: 4px;
+        background-color: #008CBA;
+        color: white;
+        transition: background-color 0.3s;
+        width: 100%;
+        text-align: left;
+    }
+
+    .upgrade-button:hover {
+        background-color: #007bb5;
+    }
+
+    .upgrade-cost {
+        font-size: 0.8em;
+        color: #fff;
+        display: block;
+        margin-top: 5px;
+    }
+
+    /* 都市管理パネルのスタイル */
+    .city-panel {
+        display: none; /* 初期は非表示 */
+        margin-top: 20px;
+        padding: 10px;
+        border: 2px solid #333;
+        border-radius: 8px;
+        background-color: #f9f9f9;
+    }
+
+    .city-panel h2 {
+        text-align: center;
+        margin-bottom: 10px;
+    }
+
+    .city-details {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .city-details div {
+        display: flex;
+        justify-content: space-between;
+    }
+
+    .city-details button {
+        padding: 5px 10px;
+        cursor: pointer;
+        border: none;
+        border-radius: 4px;
+        background-color: #FF6347;
+        color: white;
+        transition: background-color 0.3s;
+    }
+
+    .city-details button:hover {
+        background-color: #FF4500;
+    }
+
+    /* Footer */
+    footer {
+        text-align: center;
+        margin-top: 20px;
+        font-size: 0.9em;
+        color: #666;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .status-bar {
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .facility-panel, .city-panel {
+            max-width: 90%;
+        }
+
+        .upgrade-options {
+            flex-direction: column;
+        }
+    }
+</style>
+
+<script>// ゲームデータ
+    const gameData = {
+        resources: {
+            food: 100,
+            wood: 100,
+            stone: 100,
+            gold: 100
+        },
+        facilities: {
+            woodcutter: { level: 1, production: 1 },
+            quarry: { level: 1, production: 1 },
+            farm: { level: 1, production: 1 },
+            mine: { level: 1, production: 1 }
+        },
+        city: {
+            level: 1,
+            defense: 10,
+            resourceStorage: 100,
+            population: 10
+        },
+        selectedCity: null,
+        foodConsumptionTimer: null
+    };
+    
+    // 初期化
+    document.addEventListener('DOMContentLoaded', () => {
+        updateUpgradeCosts();
+        updateUI();
+        setupEventListeners();
+        setupFacilityPanelToggle();
+        startProductionCycle();
+        startFoodConsumption();
+    });
+    
+    // UI更新
+    function updateUI() {
+        // 資源表示
+        document.getElementById('food').innerText = Math.floor(gameData.resources.food);
+        document.getElementById('wood').innerText = Math.floor(gameData.resources.wood);
+        document.getElementById('stone').innerText = Math.floor(gameData.resources.stone);
+        document.getElementById('gold').innerText = Math.floor(gameData.resources.gold);
+    
+        // 施設レベル表示
+        document.getElementById('woodcutter-level').innerText = `レベル: ${gameData.facilities.woodcutter.level}`;
+        document.getElementById('quarry-level').innerText = `レベル: ${gameData.facilities.quarry.level}`;
+        document.getElementById('farm-level').innerText = `レベル: ${gameData.facilities.farm.level}`;
+        document.getElementById('mine-level').innerText = `レベル: ${gameData.facilities.mine.level}`;
+    
+        // 都市詳細表示
+        document.getElementById('city-level').innerText = gameData.city.level;
+        document.getElementById('city-defense').innerText = gameData.city.defense;
+        document.getElementById('city-resource-storage').innerText = gameData.city.resourceStorage;
+        document.getElementById('city-population').innerText = gameData.city.population;
+    }
+    
+    // レベルアップに必要な資源を表示
+    function updateUpgradeCosts() {
+        // 各施設のアップグレードコストを設定
+        const upgradeCosts = {
+            woodcutter: { production: { food: 10, wood: 5 } },
+            quarry: { production: { stone: 15, gold: 5 } },
+            farm: { production: { food: 10, wood: 5 } },
+            mine: { production: { gold: 20 } }
+        };
+    
+        for (let facility in upgradeCosts) {
+            const productionCost = upgradeCosts[facility].production;
+            const costText = Object.entries(productionCost)
+                .map(([resource, amount]) => `${amount} ${getResourceName(resource)}`)
+                .join(', ');
+            document.querySelector(`#${facility}-production-cost`).innerText = `必要: ${costText}`;
+        }
+    }
+    
+    // イベントリスナー設定
+    function setupEventListeners() {
+        // 資源収集ボタン
+        const collectButtons = document.querySelectorAll('.collect-button');
+        collectButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const resource = button.dataset.resource;
+                collectResource(resource);
+            });
+        });
+    
+        // 施設アップグレードボタン
+        const upgradeButtons = document.querySelectorAll('.upgrade-button');
+        upgradeButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const facility = button.dataset.facility;
+                const upgradeType = button.dataset.upgrade;
+                upgradeFacility(facility, upgradeType);
+            });
+        });
+    }
+    
+    // 資源収集
+    function collectResource(resource) {
+        playSound('click-sound');
+        gameData.resources[resource] += gameData.facilities[getFacilityByResource(resource)].production;
+        updateUI();
+    }
+    
+    // 資源に対応する施設を取得
+    function getFacilityByResource(resource) {
+        const mapping = {
+            food: 'farm',
+            wood: 'woodcutter',
+            stone: 'quarry',
+            gold: 'mine'
+        };
+        return mapping[resource];
+    }
+    
+    // 施設アップグレード
+    function upgradeFacility(facility, upgradeType) {
+        if (upgradeType !== 'production') return; // 生産量アップのみ
+    
+        const cost = getUpgradeCost(facility, upgradeType);
+        if (canAfford(cost)) {
+            spendResources(cost);
+            gameData.facilities[facility].production += 1; // 生産量をアップ
+            gameData.facilities[facility].level += 1;
+            playSound('build-sound');
+            updateUpgradeCosts();
+            updateUI();
+        } else {
+            alert('資源が不足しています。');
+        }
+    }
+    
+    // アップグレードコスト取得
+    function getUpgradeCost(facility, upgradeType) {
+        const costs = {
+            production: {
+                woodcutter: { food: 10, wood: 5 },
+                quarry: { stone: 15, gold: 5 },
+                farm: { food: 10, wood: 5 },
+                mine: { gold: 20 }
+            }
+        };
+        return costs[upgradeType][facility] || {};
+    }
+    
+    // 資源が足りているか確認
+    function canAfford(cost) {
+        for (let resource in cost) {
+            if (gameData.resources[resource] < cost[resource]) {
+                return false;
+            }
+        }
+        return true;
+    }
+    
+    // 資源を消費
+    function spendResources(cost) {
+        for (let resource in cost) {
+            gameData.resources[resource] -= cost[resource];
+        }
+    }
+    
+    // 施設管理タブの開閉設定
+    function setupFacilityPanelToggle() {
+        const toggleButton = document.getElementById('toggle-facility-panel');
+        const facilityPanel = document.getElementById('facility-panel');
+    
+        toggleButton.addEventListener('click', () => {
+            if (facilityPanel.style.display === 'none' || facilityPanel.style.display === '') {
+                facilityPanel.style.display = 'block';
+                toggleButton.innerText = '施設管理を閉じる';
+            } else {
+                facilityPanel.style.display = 'none';
+                toggleButton.innerText = '施設管理を開く';
+            }
+        });
+    }
+    
+    // 都市のレベルアップ
+    function upgradeCity() {
+        const upgradeCost = { food: 20, wood: 20, stone: 20, gold: 20 };
+    
+        if (canAfford(upgradeCost)) {
+            spendResources(upgradeCost);
+            gameData.city.level += 1;
+            gameData.city.resourceStorage += 50;
+            gameData.city.population += 5;
+            playSound('build-sound');
+            updateUI();
+        } else {
+            alert('資源が不足しています。');
+        }
+    }
+    
+    // 防衛力アップ
+    function upgradeDefense() {
+        const upgradeCost = { wood: 10, stone: 10 };
+    
+        if (canAfford(upgradeCost)) {
+            spendResources(upgradeCost);
+            gameData.city.defense += 10;
+            playSound('build-sound');
+            updateUI();
+        } else {
+            alert('資源が不足しています。');
+        }
+    }
+    
+    // 自動生産サイクル開始
+    function startProductionCycle() {
+        setInterval(() => {
+            // 各施設の生産量に基づいて資源を自動で増加
+            gameData.resources.food += gameData.facilities.farm.production * gameData.city.population * 0.1;
+            gameData.resources.wood += gameData.facilities.woodcutter.production * gameData.city.population * 0.05;
+            gameData.resources.stone += gameData.facilities.quarry.production * gameData.city.population * 0.03;
+            gameData.resources.gold += gameData.facilities.mine.production * gameData.city.population * 0.02;
+    
+            updateUI();
+        }, 1000); // 1秒ごとに実行
+    }
+    
+    // 食料消費サイクル開始
+    function startFoodConsumption() {
+        setInterval(() => {
+            const foodConsumption = gameData.city.population * 1; // 1分に1回、人口×1の食料を消費
+            gameData.resources.food -= foodConsumption;
+    
+            if (gameData.resources.food < 0) {
+                gameData.resources.food = 0;
+                gameData.city.population -= 1; // 食料不足で人口減少
+                if (gameData.city.population < 0) gameData.city.population = 0;
+                alert('食料が不足し、人口が減少しました！');
+            }
+    
+            updateUI();
+        }, 60000); // 60,000ミリ秒（1分）ごとに実行
+    }
+    
+    // 資源名を日本語で取得
+    function getResourceName(resource) {
+        const mapping = {
+            food: '食料',
+            wood: '木材',
+            stone: '石材',
+            gold: '金鉱'
+        };
+        return mapping[resource] || resource;
+    }
+    
+    // サウンド再生
+    function playSound(id) {
+        const sound = document.getElementById(id);
+        if (sound) {
+            sound.currentTime = 0;
+            sound.play();
+        }
+    }
+    </script>
